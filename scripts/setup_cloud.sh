@@ -20,6 +20,7 @@ first run.
 Requirements:
   - git
   - curl
+  - python3
   - GitHub CLI: gh auth login
 EOF
 }
@@ -121,28 +122,6 @@ ensure_git_identity() {
   fi
 }
 
-set_bark_secret() {
-  local secret_name="$1"
-  local label="$2"
-  local default_answer="$3"
-  local value=""
-
-  if ask_yes_no "Enable ${label} notifications?" "$default_answer"; then
-    read_input -s -p "Paste Bark key or full Bark URL for ${label}: " value
-    echo
-    if [ -z "$value" ]; then
-      echo "Skipped ${label}: empty Bark key."
-      return 1
-    fi
-    gh secret set "$secret_name" --repo "$TARGET_REPO" --body "$value"
-    echo "Saved ${secret_name}"
-    return 0
-  fi
-
-  echo "Skipped ${label}"
-  return 1
-}
-
 start_workflow() {
   local attempts=8
   local attempt=1
@@ -168,6 +147,7 @@ start_workflow() {
 need_command git
 need_command curl
 need_command gh
+need_command python3
 
 if ! gh auth status >/dev/null 2>&1; then
   echo "GitHub CLI is not logged in. Run: gh auth login" >&2
@@ -206,7 +186,7 @@ mv "$TMP_DIR/${SOURCE_REPO}-${BRANCH}" "$SOURCE_DIR"
 
 if gh repo view "$TARGET_REPO" >/dev/null 2>&1; then
   echo "Repository ${TARGET_REPO} already exists."
-  if ! ask_yes_no "Update this repository with Bark Webpage Notifier files?" "N"; then
+  if ! ask_yes_no "Update this repository and configure notification groups?" "Y"; then
     echo "Canceled."
     exit 0
   fi
@@ -239,17 +219,18 @@ else
   )
 fi
 
-enabled_count=0
-if set_bark_secret "BARK_KEY_BINANCE_CONTRACT" "币安合约" "Y"; then
-  enabled_count=$((enabled_count + 1))
-fi
-if set_bark_secret "BARK_KEY_BINANCE_ALPHA" "币安 alpha" "Y"; then
-  enabled_count=$((enabled_count + 1))
-fi
-
-if [ "$enabled_count" -eq 0 ]; then
-  echo "No Bark key was saved. Add at least one repository secret before the workflow can push." >&2
-fi
+(
+  cd "$WORK_DIR"
+  ensure_git_identity
+  python3 scripts/topic_wizard.py --repo "$TARGET_REPO"
+  git add bark_topics.json .github/workflows/bark-web-watch.yml
+  if git diff --cached --quiet; then
+    echo "No topic changes to commit."
+  else
+    git commit -m "Configure Bark notification topics"
+    git push
+  fi
+)
 
 if [ "$RUN_WORKFLOW" -eq 1 ]; then
   start_workflow || true

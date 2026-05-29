@@ -11,8 +11,9 @@ Usage:
 
 What it does:
   1. Copies the Bark GitHub Actions workflow into .github/workflows/.
-  2. Lets you add Bark keys as GitHub repository Secrets.
-  3. Commits and pushes the workflow when possible.
+  2. Guides you through adding notification groups.
+  3. Saves Bark keys as GitHub repository Secrets.
+  4. Commits and pushes the config/workflow when possible.
 
 Run this from your cloned or forked bark-webpage-notifier repository.
 
@@ -49,11 +50,17 @@ if ! command -v gh >/dev/null 2>&1; then
   echo "GitHub CLI is required. Install it from https://cli.github.com/ and run gh auth login." >&2
   exit 1
 fi
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "python3 is required." >&2
+  exit 1
+fi
 
 if ! gh auth status >/dev/null 2>&1; then
   echo "GitHub CLI is not logged in. Run: gh auth login" >&2
   exit 1
 fi
+
+TARGET_REPO="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
 
 mkdir -p "$(dirname "$WORKFLOW_DEST")"
 if [ -f "$WORKFLOW_DEST" ] && [ "$FORCE" -ne 1 ]; then
@@ -63,42 +70,16 @@ else
   echo "Wrote $WORKFLOW_DEST"
 fi
 
-set_secret() {
-  local secret_name="$1"
-  local label="$2"
-  local answer=""
-  local value=""
-
-  read -r -p "Set ${label} Bark key as ${secret_name}? [Y/n] " answer
-  answer="${answer:-Y}"
-  case "$answer" in
-    y|Y|yes|YES)
-      read -r -s -p "Paste Bark key or full Bark URL for ${label}: " value
-      echo
-      if [ -z "$value" ]; then
-        echo "Skipped ${secret_name}: empty value."
-        return
-      fi
-      gh secret set "$secret_name" --body "$value"
-      echo "Saved ${secret_name}"
-      ;;
-    *)
-      echo "Skipped ${secret_name}"
-      ;;
-  esac
-}
-
-set_secret "BARK_KEY_BINANCE_CONTRACT" "币安合约"
-set_secret "BARK_KEY_BINANCE_ALPHA" "币安 alpha"
+python3 scripts/topic_wizard.py --repo "$TARGET_REPO" --workflow "$WORKFLOW_DEST"
 
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  git add "$WORKFLOW_DEST"
+  git add "$WORKFLOW_DEST" bark_topics.json
   if git diff --cached --quiet; then
-    echo "No workflow changes to commit."
+    echo "No config changes to commit."
   else
-    git commit -m "Enable Bark webpage watch action"
+    git commit -m "Configure Bark webpage watch action"
     git push
-    echo "Pushed workflow to GitHub."
+    echo "Pushed config and workflow to GitHub."
   fi
 fi
 

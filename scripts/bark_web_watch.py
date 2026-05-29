@@ -235,42 +235,50 @@ def load_seen(path):
 
 
 def save_seen(path, seen):
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         json.dumps({"seen_ids": sorted(seen)}, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
 
 
-def resolve_config(env, topic):
+def secret_value(env, secret_name):
+    if not secret_name:
+        return ""
+    return normalize_bark_key(env.get(secret_name, ""))
+
+
+def resolve_config(env, topic, topic_config=None):
+    topic_config = topic_config or {}
     suffix = env_suffix(topic)
-    bark_key = env.get(f"BARK_KEY_{suffix}") or env.get("BARK_KEY")
+    secret_name = topic_config.get("secret_env")
+    bark_key = secret_value(env, secret_name) or env.get(f"BARK_KEY_{suffix}") or env.get("BARK_KEY")
     if not bark_key:
-        raise SystemExit(f"BARK_KEY_{suffix} or BARK_KEY missing in .env")
-    group = env.get(f"BARK_GROUP_{suffix}") or topic
-    source = env.get(f"SOURCE_{suffix}") or env.get("SOURCE") or "chaincatcher-search"
-    keywords = env.get(f"KEYWORDS_{suffix}") or env.get("KEYWORDS") or env.get(f"CHAINCATCHER_KEYWORDS_{suffix}") or group
-    source_url = env.get(f"SOURCE_URL_{suffix}") or env.get("SOURCE_URL")
-    state_path = Path(env.get(f"STATE_PATH_{suffix}") or f"seen_{topic.replace('-', '_')}.json")
+        expected = secret_name or f"BARK_KEY_{suffix} or BARK_KEY"
+        raise SystemExit(f"{expected} missing in .env or GitHub Secrets")
+    group = topic_config.get("group") or env.get(f"BARK_GROUP_{suffix}") or topic
+    source = topic_config.get("source") or env.get(f"SOURCE_{suffix}") or env.get("SOURCE") or "chaincatcher-search"
+    keywords = (
+        topic_config.get("keywords")
+        or env.get(f"KEYWORDS_{suffix}")
+        or env.get("KEYWORDS")
+        or env.get(f"CHAINCATCHER_KEYWORDS_{suffix}")
+        or group
+    )
+    source_url = topic_config.get("source_url") or env.get(f"SOURCE_URL_{suffix}") or env.get("SOURCE_URL")
+    state_path = Path(
+        topic_config.get("state_path")
+        or env.get(f"STATE_PATH_{suffix}")
+        or f"seen_{topic.replace('-', '_')}.json"
+    )
     return bark_key, group, source, keywords, source_url, state_path
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--topic", required=True, help="Topic name, e.g. binance-contract.")
-    parser.add_argument("--env", default=".env")
-    parser.add_argument("--page-size", type=int, default=10)
-    parser.add_argument("--init-seen", action="store_true")
-    parser.add_argument("--init-if-empty", action="store_true")
-    parser.add_argument("--once", action="store_true")
-    parser.add_argument("--test-title")
-    args = parser.parse_args()
-
-    env = load_env(Path(args.env))
-    bark_key, group, source, keywords, source_url, state_path = resolve_config(env, args.topic)
-
+def run_topic(args, env, topic, topic_config=None):
+    bark_key, group, source, keywords, source_url, state_path = resolve_config(env, topic, topic_config)
     if args.test_title:
         response = send_bark(bark_key, group, args.test_title)
-        print(json.dumps({"code": response.get("code"), "message": response.get("message")}, ensure_ascii=False))
+        print(json.dumps({"topic": topic, "code": response.get("code"), "message": response.get("message")}, ensure_ascii=False))
         return
 
     titles = fetch_titles(source, keywords, args.page_size, source_url)
@@ -278,7 +286,7 @@ def main():
 
     if args.init_seen or (args.init_if_empty and not state_path.exists()):
         save_seen(state_path, seen | {item["id"] for item in titles})
-        print(f"Initialized {state_path} without pushing.")
+        print(f"Initialized {state_path} for {topic} without pushing.")
         return
 
     if not args.once:
@@ -295,7 +303,43 @@ def main():
         pushed.append(item["title"])
 
     save_seen(state_path, seen)
-    print(json.dumps({"pushed": pushed}, ensure_ascii=False))
+    print(json.dumps({"topic": topic, "pushed": pushed}, ensure_ascii=False))
+
+
+def load_topic_configs(path):
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    topics = payload.get("topics", [])
+    if not isinstance(topics, list) or not topics:
+        raise SystemExit(f"No topics found in {path}")
+    for topic in topics:
+        if not isinstance(topic, dict) or not topic.get("name"):
+            raise SystemExit(f"Invalid topic entry in {path}: {topic}")
+    return topics
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--topic", help="Topic name, e.g. binance-contract.")
+    parser.add_argument("--config", help="JSON config with a topics array.")
+    parser.add_argument("--env", default=".env")
+    parser.add_argument("--page-size", type=int, default=10)
+    parser.add_argument("--init-seen", action="store_true")
+    parser.add_argument("--init-if-empty", action="store_true")
+    parser.add_argument("--once", action="store_true")
+    parser.add_argument("--test-title")
+    args = parser.parse_args()
+
+    if not args.topic and not args.config:
+        raise SystemExit("Use --topic or --config.")
+    if args.topic and args.config:
+        raise SystemExit("Use either --topic or --config, not both.")
+
+    env = load_env(Path(args.env))
+    if args.config:
+        for topic_config in load_topic_configs(Path(args.config)):
+            run_topic(args, env, topic_config["name"], topic_config)
+    else:
+        run_topic(args, env, args.topic)
 
 
 if __name__ == "__main__":
