@@ -56,7 +56,16 @@ curl -fsSL https://raw.githubusercontent.com/bella07021/bark-webpage-notifier/ma
 
 ### 支持哪些网页？
 
-适合稳定的搜索页、资讯列表、RSS、公开 JSON API、SSR HTML、页面内嵌 JSON。<br>
+内置来源可以直接使用：
+
+| source | 网站 | 适合关键词 |
+|---|---|---|
+| `chaincatcher-search` | ChainCatcher 搜索页 | 中文关键词 |
+| `odaily-newsflash` | Odaily 星球日报快讯 | 中文关键词 |
+| `panews-rss` | PANews RSS | 中文关键词 |
+| `coindesk-rss` | CoinDesk RSS | 英文关键词 |
+
+其他网页适合稳定的搜索页、资讯列表、RSS、公开 JSON API、SSR HTML、页面内嵌 JSON。<br>
 如果网页有验证码、人机验证或 Cloudflare challenge，长期云端轮询通常不稳定，最好改找公开 API、RSS 或备用来源。
 
 </details>
@@ -142,12 +151,16 @@ BARK_KEY=你的默认BarkKey
 ```bash
 BARK_KEY_BINANCE_ALPHA=你的BarkKey
 BARK_GROUP_BINANCE_ALPHA=币安 alpha
-CHAINCATCHER_KEYWORDS_BINANCE_ALPHA=币安 alpha
+SOURCE_BINANCE_ALPHA=chaincatcher-search
+KEYWORDS_BINANCE_ALPHA=币安 alpha
 
 BARK_KEY_BINANCE_CONTRACT=你的BarkKey
 BARK_GROUP_BINANCE_CONTRACT=币安合约
-CHAINCATCHER_KEYWORDS_BINANCE_CONTRACT=币安合约将上线
+SOURCE_BINANCE_CONTRACT=odaily-newsflash
+KEYWORDS_BINANCE_CONTRACT=币安合约将上线
 ```
+
+可用的内置 `SOURCE`：`chaincatcher-search`、`odaily-newsflash`、`panews-rss`、`coindesk-rss`。
 
 发送测试推送：
 
@@ -227,7 +240,16 @@ No URL, subtitle, or summary is included by default.
 
 ### What pages are supported?
 
-It works best with stable search pages, news lists, RSS feeds, public JSON APIs, SSR HTML, or embedded JSON.<br>
+Built-in sources can be used directly:
+
+| source | Site | Good for |
+|---|---|---|
+| `chaincatcher-search` | ChainCatcher search | Chinese keywords |
+| `odaily-newsflash` | Odaily newsflash | Chinese keywords |
+| `panews-rss` | PANews RSS | Chinese keywords |
+| `coindesk-rss` | CoinDesk RSS | English keywords |
+
+Other pages work best when they are stable search pages, news lists, RSS feeds, public JSON APIs, SSR HTML, or embedded JSON.<br>
 Pages protected by captcha, human verification, or Cloudflare challenge are usually unreliable for long-running cloud polling. Prefer a public API, RSS feed, or alternate source.
 
 </details>
@@ -313,12 +335,16 @@ For multiple notification groups, use topic-specific variables:
 ```bash
 BARK_KEY_BINANCE_ALPHA=your_bark_key
 BARK_GROUP_BINANCE_ALPHA=币安 alpha
-CHAINCATCHER_KEYWORDS_BINANCE_ALPHA=币安 alpha
+SOURCE_BINANCE_ALPHA=chaincatcher-search
+KEYWORDS_BINANCE_ALPHA=币安 alpha
 
 BARK_KEY_BINANCE_CONTRACT=your_bark_key
 BARK_GROUP_BINANCE_CONTRACT=币安合约
-CHAINCATCHER_KEYWORDS_BINANCE_CONTRACT=币安合约将上线
+SOURCE_BINANCE_CONTRACT=odaily-newsflash
+KEYWORDS_BINANCE_CONTRACT=币安合约将上线
 ```
+
+Available built-in `SOURCE` values: `chaincatcher-search`, `odaily-newsflash`, `panews-rss`, `coindesk-rss`.
 
 Send a test push:
 

@@ -50,10 +50,24 @@ Use topic-specific env vars when multiple Bark groups exist:
 BARK_KEY=default_key
 BARK_KEY_BINANCE_CONTRACT=optional_topic_key
 BARK_GROUP_BINANCE_CONTRACT=币安合约
-CHAINCATCHER_KEYWORDS_BINANCE_CONTRACT=币安合约将上线
+SOURCE_BINANCE_CONTRACT=odaily-newsflash
+KEYWORDS_BINANCE_CONTRACT=币安合约将上线
 ```
 
 If the topic key is missing, it is usually okay to fall back to `BARK_KEY` and still use the topic-specific group.
+
+## Built-In Sources
+
+Use a built-in source whenever possible so ordinary users can configure monitoring without writing parser code:
+
+```text
+chaincatcher-search
+odaily-newsflash
+panews-rss
+coindesk-rss
+```
+
+`chaincatcher-search`, `odaily-newsflash`, and `panews-rss` are suitable for Chinese crypto news keywords. `coindesk-rss` is suitable for English keywords. For RSS/newsflash sources, the script fetches the latest list and filters titles/descriptions locally with `KEYWORDS_<TOPIC>`.
 
 ## ChainCatcher Pattern
 
@@ -107,7 +121,8 @@ For a new topic, prefer explicit variables:
 ```bash
 BARK_KEY_MY_TOPIC=...
 BARK_GROUP_MY_TOPIC=...
-CHAINCATCHER_KEYWORDS_MY_TOPIC=...
+SOURCE_MY_TOPIC=odaily-newsflash
+KEYWORDS_MY_TOPIC=...
 ```
 
 Then run:
