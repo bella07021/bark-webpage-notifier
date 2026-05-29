@@ -9,6 +9,9 @@ permissions:
   contents: read
   actions: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 concurrency:
   group: bark-webpage-watch
   cancel-in-progress: false
