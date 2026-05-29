@@ -15,6 +15,9 @@ What it does:
   3. Commits and pushes the workflow when possible.
 
 Run this from your cloned or forked bark-webpage-notifier repository.
+
+If you are starting from zero, use:
+  curl -fsSL https://raw.githubusercontent.com/bella07021/bark-webpage-notifier/main/scripts/setup_cloud.sh | bash
 EOF
 }
 

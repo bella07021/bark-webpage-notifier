@@ -50,4 +50,5 @@ echo "  ${INSTALL_DIR}"
 echo
 echo "Next:"
 echo "  Restart Codex or open a new Codex chat, then ask it to use ${SKILL_NAME}."
-echo "  For cloud polling, run: scripts/setup_github_actions.sh"
+echo "  For cloud polling, run:"
+echo "    curl -fsSL https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/scripts/setup_cloud.sh | bash"

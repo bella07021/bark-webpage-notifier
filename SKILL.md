@@ -121,6 +121,14 @@ python3 scripts/bark_web_watch.py --topic my-topic --once
 
 Use GitHub Actions when the monitor must keep running after the user's computer shuts down. Add a workflow under `.github/workflows/` rather than relying on local cron.
 
+For public end-user onboarding, default to the guided cloud setup instead of asking users to install the Codex skill:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bella07021/bark-webpage-notifier/main/scripts/setup_cloud.sh | bash
+```
+
+Clarify that installing the Codex skill is optional: GitHub Actions does the actual scheduled polling, while the skill only helps Codex modify or extend monitors later.
+
 Required patterns:
 
 - Put Bark keys in repository Secrets, for example `BARK_KEY_BINANCE_CONTRACT`.
