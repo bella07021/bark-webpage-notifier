@@ -5,8 +5,6 @@ import json
 import re
 import subprocess
 import sys
-import urllib.error
-import urllib.request
 from pathlib import Path
 
 
@@ -152,25 +150,35 @@ def send_test_push(bark_value, group):
     payload = json.dumps(
         {"title": group, "body": "test success", "group": group},
         ensure_ascii=False,
-    ).encode("utf-8")
-    request = urllib.request.Request(
-        f"https://api.day.app/{bark_key}",
-        data=payload,
-        headers={"Content-Type": "application/json; charset=utf-8"},
-        method="POST",
     )
-    try:
-        with urllib.request.urlopen(request, timeout=20) as response:
-            body = response.read().decode("utf-8")
-    except urllib.error.URLError as exc:
-        raise RuntimeError(f"Bark test push failed: {exc}") from exc
+    result = subprocess.run(
+        [
+            "curl",
+            "-fsSL",
+            "--max-time",
+            "20",
+            "-X",
+            "POST",
+            f"https://api.day.app/{bark_key}",
+            "-H",
+            "Content-Type: application/json; charset=utf-8",
+            "-d",
+            payload,
+        ],
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout or "").strip()
+        raise RuntimeError(f"Bark test push failed: {detail}")
 
     try:
-        result = json.loads(body)
+        response = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
         raise RuntimeError("Bark test push returned non-JSON response") from exc
-    if result.get("code") != 200:
-        raise RuntimeError(f"Bark test push failed: {result.get('message') or result}")
+    if response.get("code") != 200:
+        raise RuntimeError(f"Bark test push failed: {response.get('message') or response}")
 
 
 def patch_workflow(path, secret_names):
