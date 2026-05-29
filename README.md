@@ -16,7 +16,7 @@
 
 2. 在 iOS 端下载 Bark App，找到“推送消息分组”的 URL。后续配置时可以粘贴完整 URL，也可以只粘贴 URL 里的 key。需要分组时，把 URL 末尾的 `groupName` 改成对应的组名。
 
-   ![Bark 分组 URL 示例，key 已遮挡](assets/bark-group-url-redacted.svg)
+   ![Bark 分组 URL 示例，key 已遮挡](assets/bark-group-url-redacted.jpeg)
 
 3. 在终端检查并准备这些命令：
 
@@ -238,7 +238,7 @@ Push new webpage, search-page, or news-list titles to Bark iOS notifications. Th
 
 2. Install the Bark app on iOS and find the "grouped notification" URL. During setup, you can paste the full URL or just the key inside the URL. To use a group, replace the trailing `groupName` with your group name.
 
-   ![Bark group URL example with key redacted](assets/bark-group-url-redacted.svg)
+   ![Bark group URL example with key redacted](assets/bark-group-url-redacted.jpeg)
 
 3. Check these commands in Terminal:
 
