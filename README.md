@@ -10,6 +10,37 @@
 
 把网页、搜索页、资讯列表里的新消息标题推送到 Bark iOS 通知。默认用 GitHub Actions 云端定时轮询，所以电脑关机、Codex 关闭后也能继续运行。
 
+## 前置准备
+
+先确认你有 GitHub 账号，以及 Bark App 里的 key 或完整 Bark 测试 URL。
+
+在终端检查并准备这些命令：
+
+```bash
+git --version
+curl --version
+python3 --version
+gh --version
+```
+
+如果缺少 GitHub CLI，先安装它：
+
+```bash
+brew install gh
+```
+
+然后登录 GitHub：
+
+```bash
+gh auth login
+```
+
+如果你的电脑没有 `brew`，先安装 Homebrew：
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
 ## 一键开始
 
 在终端运行：
@@ -27,12 +58,6 @@ curl -fsSL https://raw.githubusercontent.com/bella07021/bark-webpage-notifier/ma
 - 确认后把 Bark key 保存到 GitHub Secrets
 - 推送 GitHub Actions workflow
 - 启动第一次 workflow
-
-你只需要提前准备：
-
-- GitHub 账号
-- GitHub CLI，并已登录：`gh auth login`
-- Bark App 里的 key，或者完整 Bark 测试 URL
 
 第一次 workflow 只记录当前旧消息，不会推送历史标题；之后默认每 5 分钟检查一次，只推送新增标题。
 
@@ -203,6 +228,37 @@ python3 ~/.codex/skills/bark-webpage-notifier/scripts/bark_web_watch.py \
 
 Push new webpage, search-page, or news-list titles to Bark iOS notifications. The default setup uses GitHub Actions for cloud polling, so it keeps running even when your computer and Codex are closed.
 
+## Prerequisites
+
+Make sure you have a GitHub account and your Bark key, or the full Bark test URL from the Bark app.
+
+Check these commands in Terminal:
+
+```bash
+git --version
+curl --version
+python3 --version
+gh --version
+```
+
+If GitHub CLI is missing, install it first:
+
+```bash
+brew install gh
+```
+
+Then log in to GitHub:
+
+```bash
+gh auth login
+```
+
+If your Mac does not have `brew`, install Homebrew first:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
 ## Quick Start
 
 Run this in Terminal:
@@ -220,12 +276,6 @@ The script guides you through the full setup:
 - save Bark keys as GitHub Secrets after confirmation
 - push the GitHub Actions workflow
 - start the first workflow run
-
-Prepare these first:
-
-- a GitHub account
-- GitHub CLI, logged in with `gh auth login`
-- your Bark key, or the full Bark test URL from the Bark app
 
 The first workflow run records current old titles without pushing them. Later runs check every 5 minutes by default and push only new titles.
 
