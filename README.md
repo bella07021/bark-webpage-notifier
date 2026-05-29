@@ -20,6 +20,7 @@ curl -fsSL https://raw.githubusercontent.com/bella07021/bark-webpage-notifier/ma
 
 脚本会带你完成完整流程：
 
+- 选择中文或英文
 - 创建或更新一个 GitHub 仓库
 - 添加一个或多个推送组
 - 为每个推送组选择信息来源、填写关键词、Bark 分组名和 Bark key
@@ -212,6 +213,7 @@ curl -fsSL https://raw.githubusercontent.com/bella07021/bark-webpage-notifier/ma
 
 The script guides you through the full setup:
 
+- choose Chinese or English
 - create or update a GitHub repository
 - add one or more notification groups
 - choose a source, keywords, Bark group, and Bark key for each group

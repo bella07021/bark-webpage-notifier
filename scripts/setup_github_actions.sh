@@ -7,7 +7,7 @@ WORKFLOW_DEST=".github/workflows/bark-web-watch.yml"
 usage() {
   cat <<'EOF'
 Usage:
-  scripts/setup_github_actions.sh [--force]
+  scripts/setup_github_actions.sh [--force] [--lang zh|en]
 
 What it does:
   1. Copies the Bark GitHub Actions workflow into .github/workflows/.
@@ -23,10 +23,15 @@ EOF
 }
 
 FORCE=0
+LANG_CHOICE=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --force)
       FORCE=1
+      ;;
+    --lang)
+      LANG_CHOICE="${2:-}"
+      shift
       ;;
     -h|--help)
       usage
@@ -40,6 +45,71 @@ while [ "$#" -gt 0 ]; do
   esac
   shift
 done
+
+if [ -t 1 ]; then
+  BOLD="$(printf '\033[1m')"
+  DIM="$(printf '\033[2m')"
+  BLUE="$(printf '\033[34m')"
+  GREEN="$(printf '\033[32m')"
+  RED="$(printf '\033[31m')"
+  RESET="$(printf '\033[0m')"
+else
+  BOLD=""
+  DIM=""
+  BLUE=""
+  GREEN=""
+  RED=""
+  RESET=""
+fi
+
+read_input() {
+  if [ -r /dev/tty ]; then
+    read -r "$@" </dev/tty
+  else
+    read -r "$@"
+  fi
+}
+
+choose_language() {
+  if [ -n "$LANG_CHOICE" ]; then
+    case "$LANG_CHOICE" in
+      zh|en) return ;;
+      *)
+        echo "${RED}--lang must be zh or en.${RESET}" >&2
+        exit 1
+        ;;
+    esac
+  fi
+  echo "${BOLD}${BLUE}Bark Webpage Notifier${RESET}"
+  echo "1. 中文"
+  echo "2. English"
+  local value=""
+  read_input -p "${BOLD}选择语言 / Choose language${RESET} ${DIM}[1]${RESET}: " value
+  case "${value:-1}" in
+    2|en|EN|English|english) LANG_CHOICE="en" ;;
+    *) LANG_CHOICE="zh" ;;
+  esac
+}
+
+say_step() {
+  if [ "$LANG_CHOICE" = "zh" ]; then
+    echo
+    echo "${BOLD}${BLUE}==> $1${RESET}"
+  else
+    echo
+    echo "${BOLD}${BLUE}==> $2${RESET}"
+  fi
+}
+
+say_ok() {
+  if [ "$LANG_CHOICE" = "zh" ]; then
+    echo "${GREEN}$1${RESET}"
+  else
+    echo "${GREEN}$2${RESET}"
+  fi
+}
+
+choose_language
 
 if [ ! -f "$WORKFLOW_SRC" ]; then
   echo "Missing $WORKFLOW_SRC. Run this script from the repository root." >&2
@@ -62,6 +132,7 @@ fi
 
 TARGET_REPO="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
 
+say_step "准备 GitHub Actions workflow" "Preparing GitHub Actions workflow"
 mkdir -p "$(dirname "$WORKFLOW_DEST")"
 if [ -f "$WORKFLOW_DEST" ] && [ "$FORCE" -ne 1 ]; then
   echo "$WORKFLOW_DEST already exists; keeping it. Use --force to overwrite."
@@ -70,7 +141,8 @@ else
   echo "Wrote $WORKFLOW_DEST"
 fi
 
-python3 scripts/topic_wizard.py --repo "$TARGET_REPO" --workflow "$WORKFLOW_DEST"
+say_step "配置推送组" "Configuring notification groups"
+python3 scripts/topic_wizard.py --repo "$TARGET_REPO" --workflow "$WORKFLOW_DEST" --lang "$LANG_CHOICE"
 
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   git add "$WORKFLOW_DEST" bark_topics.json
@@ -79,7 +151,7 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   else
     git commit -m "Configure Bark webpage watch action"
     git push
-    echo "Pushed config and workflow to GitHub."
+    say_ok "配置和 workflow 已推送到 GitHub。" "Pushed config and workflow to GitHub."
   fi
 fi
 

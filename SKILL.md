@@ -32,6 +32,7 @@ Create small local monitors that poll a webpage or API, extract new message titl
 6. Only after the user confirms the test push, set up a recurring run with GitHub Actions, the app automation tool, launchd, cron, or another scheduler the user prefers. For GitHub Actions, store Bark keys in repository Secrets and persist `seen_*.json` with `actions/cache`.
 
 For public GitHub Actions installs, prefer `scripts/setup_cloud.sh`. It creates or updates `bark_topics.json`, stores one GitHub Secret per notification group, patches the workflow env block, and lets the user add more groups by running the same script again.
+The setup scripts start by asking for Chinese or English and should use colored, step-by-step prompts that explain what each operation is doing.
 
 ## Recommended Files
 

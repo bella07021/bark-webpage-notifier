@@ -9,10 +9,10 @@ from pathlib import Path
 
 
 SOURCES = [
-    ("chaincatcher-search", "ChainCatcher 搜索页 / Chinese search"),
-    ("odaily-newsflash", "Odaily 星球日报快讯 / Chinese newsflash"),
-    ("panews-rss", "PANews RSS / Chinese RSS"),
-    ("coindesk-rss", "CoinDesk RSS / English RSS"),
+    ("chaincatcher-search", "ChainCatcher 搜索页", "ChainCatcher search"),
+    ("odaily-newsflash", "Odaily 星球日报快讯", "Odaily newsflash"),
+    ("panews-rss", "PANews RSS", "PANews RSS"),
+    ("coindesk-rss", "CoinDesk RSS", "CoinDesk RSS"),
 ]
 
 
@@ -24,11 +24,43 @@ def open_tty():
 
 
 TTY = open_tty()
+LANG = "zh"
+
+if sys.stdout.isatty():
+    BOLD = "\033[1m"
+    DIM = "\033[2m"
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    BLUE = "\033[34m"
+    RESET = "\033[0m"
+else:
+    BOLD = DIM = RED = GREEN = YELLOW = BLUE = RESET = ""
+
+
+def tr(zh, en):
+    return zh if LANG == "zh" else en
+
+
+def step(zh, en):
+    print(f"\n{BOLD}{BLUE}==> {tr(zh, en)}{RESET}")
+
+
+def note(zh, en):
+    print(f"{DIM}{tr(zh, en)}{RESET}")
+
+
+def ok(zh, en):
+    print(f"{GREEN}{tr(zh, en)}{RESET}")
+
+
+def warn(zh, en):
+    print(f"{YELLOW}{tr(zh, en)}{RESET}")
 
 
 def ask(prompt, default=""):
     suffix = f" [{default}]" if default else ""
-    print(f"{prompt}{suffix}: ", end="", flush=True)
+    print(f"{BOLD}{prompt}{RESET}{DIM}{suffix}{RESET}: ", end="", flush=True)
     value = TTY.readline()
     if value == "":
         return default
@@ -45,8 +77,8 @@ def ask_yes_no(prompt, default="Y"):
 
 def ask_secret(prompt):
     if TTY is sys.stdin:
-        return getpass.getpass(f"{prompt}: ")
-    print(f"{prompt}: ", end="", flush=True)
+        return getpass.getpass(f"{BOLD}{prompt}{RESET}: ")
+    print(f"{BOLD}{prompt}{RESET}: ", end="", flush=True)
     return getpass.getpass("", stream=sys.stderr)
 
 
@@ -82,16 +114,21 @@ def next_topic_name(existing, source):
 
 
 def choose_source():
-    print("\n选择信息来源 / Choose source:")
-    for index, (source, label) in enumerate(SOURCES, start=1):
+    step("选择信息来源", "Choose a source")
+    note(
+        "信息来源决定脚本去哪里抓标题。RSS/快讯源会在本地按关键词过滤。",
+        "The source decides where titles come from. RSS/newsflash sources are filtered locally by keywords.",
+    )
+    for index, (source, zh_label, en_label) in enumerate(SOURCES, start=1):
+        label = zh_label if LANG == "zh" else en_label
         print(f"  {index}. {source} - {label}")
     while True:
-        value = ask("Source number", "1").strip()
+        value = ask(tr("输入序号或 source 名称", "Source number or source name"), "1").strip()
         if value.isdigit() and 1 <= int(value) <= len(SOURCES):
             return SOURCES[int(value) - 1][0]
-        if value in {source for source, _ in SOURCES}:
+        if value in {source for source, _, _ in SOURCES}:
             return value
-        print("Please choose a valid source.")
+        warn("请输入有效的信息来源。", "Please choose a valid source.")
 
 
 def set_secret(repo, secret_name, bark_value):
@@ -123,11 +160,15 @@ def patch_workflow(path, secret_names):
 
 
 def print_summary(topic):
-    print("\n信息确认 / Confirm notification group:")
+    step("信息确认", "Confirm notification group")
     print(f"  source:   {topic['source']}")
     print(f"  keywords: {topic['keywords']}")
     print(f"  group:    {topic['group']}")
     print(f"  secret:   {topic['secret_env']}")
+    note(
+        "Bark key 不会写入配置文件，只会保存到 GitHub Secrets。",
+        "The Bark key is not written to the config file; it is saved as a GitHub Secret.",
+    )
 
 
 def main():
@@ -135,7 +176,10 @@ def main():
     parser.add_argument("--repo", required=True)
     parser.add_argument("--config", default="bark_topics.json")
     parser.add_argument("--workflow", default=".github/workflows/bark-web-watch.yml")
+    parser.add_argument("--lang", choices=("zh", "en"), default="zh")
     args = parser.parse_args()
+    global LANG
+    LANG = args.lang
 
     config_path = Path(args.config)
     workflow_path = Path(args.workflow)
@@ -143,24 +187,41 @@ def main():
     topics = config.setdefault("topics", [])
 
     if topics:
-        print("\nExisting notification groups:")
+        step("已有推送组", "Existing notification groups")
         for topic in topics:
             print(f"  - {topic['group']} ({topic['source']}, {topic['keywords']})")
 
-    if topics and not ask_yes_no("Add another notification group?", "Y"):
+    if topics and not ask_yes_no(tr("继续添加新的推送组？", "Add another notification group?"), "Y"):
         patch_workflow(workflow_path, [topic["secret_env"] for topic in topics])
         save_config(config_path, config)
         return
 
     while True:
         source = choose_source()
-        keywords = ask("输入关键词 / Keywords").strip()
+        step("填写关键词", "Enter keywords")
+        note(
+            "脚本只会推送匹配关键词的新标题。多个关键词可用逗号分隔，任意一个命中就会推送。",
+            "Only new titles matching these keywords are pushed. Separate multiple keywords with commas; any match counts.",
+        )
+        keywords = ask(tr("输入关键词", "Keywords")).strip()
         while not keywords:
-            keywords = ask("Keywords cannot be empty. 输入关键词 / Keywords").strip()
-        group = ask("输入 Bark 分组名 / Bark group", keywords).strip()
-        bark_value = ask_secret("输入 Bark key 或完整 Bark URL / Bark key or URL").strip()
+            keywords = ask(tr("关键词不能为空，请重新输入", "Keywords cannot be empty. Try again")).strip()
+
+        step("设置 Bark 分组", "Set Bark group")
+        note(
+            "Bark 分组会显示在手机通知里，用来把同类消息归在一起。",
+            "The Bark group appears in iOS notifications and groups related messages together.",
+        )
+        group = ask(tr("输入 Bark 分组名", "Bark group"), keywords).strip()
+
+        step("保存 Bark Key", "Save Bark key")
+        note(
+            "可以粘贴 Bark key，也可以粘贴 Bark App 里的完整测试 URL。输入会隐藏显示。",
+            "Paste either the Bark key or the full Bark test URL. Input is hidden.",
+        )
+        bark_value = ask_secret(tr("输入 Bark key 或完整 Bark URL", "Bark key or URL")).strip()
         while not bark_value:
-            bark_value = ask_secret("Bark value cannot be empty. Bark key or URL").strip()
+            bark_value = ask_secret(tr("Bark key 不能为空，请重新输入", "Bark value cannot be empty. Try again")).strip()
 
         name = next_topic_name(topics, source)
         secret_name = f"BARK_KEY_{env_suffix(name)}"
@@ -173,20 +234,21 @@ def main():
             "state_path": f".bark-state/seen_{name.replace('-', '_')}.json",
         }
         print_summary(topic)
-        if not ask_yes_no("Save this notification group?", "Y"):
-            print("Skipped this group.")
+        if not ask_yes_no(tr("保存这个推送组？", "Save this notification group?"), "Y"):
+            warn("已跳过这个推送组。", "Skipped this group.")
         else:
+            note("正在保存 GitHub Secret...", "Saving GitHub Secret...")
             set_secret(args.repo, secret_name, bark_value)
             topics.append(topic)
             save_config(config_path, config)
             patch_workflow(workflow_path, [item["secret_env"] for item in topics])
-            print(f"Saved {group}.")
+            ok(f"已保存：{group}", f"Saved: {group}")
 
-        if not ask_yes_no("Add another notification group?", "N"):
+        if not ask_yes_no(tr("继续添加另一个推送组？", "Add another notification group?"), "N"):
             break
 
     if not topics:
-        raise SystemExit("No notification groups configured.")
+        raise SystemExit(tr("没有配置任何推送组。", "No notification groups configured."))
 
 
 if __name__ == "__main__":
