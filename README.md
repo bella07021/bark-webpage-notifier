@@ -12,9 +12,13 @@
 
 ## 前置准备
 
-先确认你有 GitHub 账号，以及 Bark App 里的 key 或完整 Bark 测试 URL。
+1. 注册一个 GitHub 账号。
 
-在终端检查并准备这些命令：
+2. 在 iOS 端下载 Bark App，找到“推送消息分组”的 URL。后续配置时可以粘贴完整 URL，也可以只粘贴 URL 里的 key。需要分组时，把 URL 末尾的 `groupName` 改成对应的组名。
+
+   ![Bark 分组 URL 示例，key 已遮挡](assets/bark-group-url-redacted.svg)
+
+3. 在终端检查并准备这些命令：
 
 ```bash
 git --version
@@ -23,19 +27,19 @@ python3 --version
 gh --version
 ```
 
-如果缺少 GitHub CLI，先安装它：
+4. 如果缺少 GitHub CLI，先安装它：
 
 ```bash
 brew install gh
 ```
 
-然后登录 GitHub：
+5. 登录 GitHub：
 
 ```bash
 gh auth login
 ```
 
-如果你的电脑没有 `brew`，先安装 Homebrew：
+6. 如果你的电脑没有 `brew`，先安装 Homebrew：
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -230,9 +234,13 @@ Push new webpage, search-page, or news-list titles to Bark iOS notifications. Th
 
 ## Prerequisites
 
-Make sure you have a GitHub account and your Bark key, or the full Bark test URL from the Bark app.
+1. Create a GitHub account.
 
-Check these commands in Terminal:
+2. Install the Bark app on iOS and find the "grouped notification" URL. During setup, you can paste the full URL or just the key inside the URL. To use a group, replace the trailing `groupName` with your group name.
+
+   ![Bark group URL example with key redacted](assets/bark-group-url-redacted.svg)
+
+3. Check these commands in Terminal:
 
 ```bash
 git --version
@@ -241,19 +249,19 @@ python3 --version
 gh --version
 ```
 
-If GitHub CLI is missing, install it first:
+4. If GitHub CLI is missing, install it first:
 
 ```bash
 brew install gh
 ```
 
-Then log in to GitHub:
+5. Log in to GitHub:
 
 ```bash
 gh auth login
 ```
 
-If your Mac does not have `brew`, install Homebrew first:
+6. If your Mac does not have `brew`, install Homebrew first:
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
