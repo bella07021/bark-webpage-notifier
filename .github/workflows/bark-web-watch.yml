@@ -20,6 +20,10 @@ jobs:
   watch:
     runs-on: ubuntu-latest
     env:
+      BARK_KEY_BINANCE_ALPHA: ${{ secrets.BARK_KEY_BINANCE_ALPHA }}
+      BARK_GROUP_BINANCE_ALPHA: 币安 alpha
+      CHAINCATCHER_KEYWORDS_BINANCE_ALPHA: 币安 alpha
+      STATE_PATH_BINANCE_ALPHA: .bark-state/seen_binance_alpha.json
       BARK_KEY_BINANCE_CONTRACT: ${{ secrets.BARK_KEY_BINANCE_CONTRACT }}
       BARK_GROUP_BINANCE_CONTRACT: 币安合约
       CHAINCATCHER_KEYWORDS_BINANCE_CONTRACT: 币安合约将上线
@@ -41,6 +45,7 @@ jobs:
         run: |
           mkdir -p .bark-state
           python3 scripts/bark_web_watch.py --topic binance-contract --once --init-if-empty
+          python3 scripts/bark_web_watch.py --topic binance-alpha --once --init-if-empty
 
       - name: Save seen state
         if: always()
