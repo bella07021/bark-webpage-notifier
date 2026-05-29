@@ -10,6 +10,42 @@
 
 一个 Codex skill，用来把网页、搜索页、资讯列表里的新消息标题推送到 Bark iOS 通知，并支持 Bark 分组、去重和定时轮询。
 
+## 一键开始
+
+### 只安装 Skill
+
+在终端运行：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bella07021/bark-webpage-notifier/main/scripts/install_skill.sh | bash
+```
+
+然后重开 Codex，就可以直接说：
+
+```text
+用 bark-webpage-notifier 帮我监控这个网页，并推送到 Bark
+```
+
+### 让它在 GitHub Actions 云端运行
+
+如果你希望关电脑后也继续轮询：
+
+1. Fork 或 clone 这个仓库。
+2. 确认已安装并登录 GitHub CLI：`gh auth login`。
+3. 在仓库目录运行：
+
+```bash
+scripts/setup_github_actions.sh
+```
+
+4. 打开 GitHub：
+
+```text
+Actions -> Bark Webpage Watch -> Run workflow
+```
+
+脚本会帮你复制 workflow、写入 Bark key 到 GitHub Secrets，并在可以时自动 commit/push。workflow 默认每 5 分钟检查一次；第一次运行只记录旧消息，后面才推送新增标题。
+
 ## 功能
 
 - 从 `.env` 读取 Bark key，避免把 key 写进脚本
@@ -20,7 +56,7 @@
 - 支持用 GitHub Actions 云端定时运行
 - 支持先发测试推送，再正式开启监控
 
-## 安装
+## 手动安装
 
 把这个目录复制到 Codex skills 目录：
 
@@ -111,9 +147,15 @@ cron 示例：每 3 分钟检查一次。
 */3 * * * * cd /path/to/workspace && python3 ~/.codex/skills/bark-webpage-notifier/scripts/bark_web_watch.py --topic binance-contract --once
 ```
 
-## 用 GitHub Actions 云端运行
+## 手动配置 GitHub Actions
 
 如果希望电脑关机后也能继续推送，可以把脚本放在 GitHub 仓库里，用 GitHub Actions 定时运行。几分钟级别的监控很适合这种方式。
+
+更省事的方式是直接运行：
+
+```bash
+scripts/setup_github_actions.sh
+```
 
 ### 1. 添加 Bark key 到 Secrets
 
@@ -127,6 +169,13 @@ Settings -> Secrets and variables -> Actions -> New repository secret
 
 ```text
 Name: BARK_KEY_BINANCE_CONTRACT
+Secret: 你的 Bark key
+```
+
+如果还要监控币安 alpha，再添加：
+
+```text
+Name: BARK_KEY_BINANCE_ALPHA
 Secret: 你的 Bark key
 ```
 
@@ -186,6 +235,42 @@ A Codex skill for turning webpage/search-page updates into clean Bark iOS push n
 
 It is designed for pages where a stable API, SSR HTML, RSS feed, or embedded JSON can expose repeated message items. The default bundled helper script supports ChainCatcher search pages and sends title-only Bark notifications grouped by topic.
 
+## Quick Start
+
+### Install The Skill
+
+Run this in Terminal:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bella07021/bark-webpage-notifier/main/scripts/install_skill.sh | bash
+```
+
+Restart Codex, then ask:
+
+```text
+Use bark-webpage-notifier to monitor this page and push new titles to Bark.
+```
+
+### Run It In GitHub Actions
+
+If you want polling to continue while your computer is off:
+
+1. Fork or clone this repository.
+2. Make sure GitHub CLI is installed and logged in: `gh auth login`.
+3. Run this from the repository directory:
+
+```bash
+scripts/setup_github_actions.sh
+```
+
+4. Open GitHub:
+
+```text
+Actions -> Bark Webpage Watch -> Run workflow
+```
+
+The script copies the workflow, saves Bark keys as GitHub Secrets, and commits/pushes the workflow when possible. The workflow checks every 5 minutes; the first run records old titles, and later runs push only new titles.
+
 ## What It Does
 
 - Reads Bark keys from `.env`
@@ -196,7 +281,7 @@ It is designed for pages where a stable API, SSR HTML, RSS feed, or embedded JSO
 - Supports GitHub Actions scheduled cloud runs
 - Supports a test push before live monitoring
 
-## Install
+## Manual Install
 
 Copy this folder into your Codex skills directory:
 
@@ -287,9 +372,15 @@ Example cron entry for every 3 minutes:
 */3 * * * * cd /path/to/workspace && python3 ~/.codex/skills/bark-webpage-notifier/scripts/bark_web_watch.py --topic binance-contract --once
 ```
 
-## Run In GitHub Actions
+## Manual GitHub Actions Setup
 
 If you want the monitor to keep running after your computer is off, run it on GitHub Actions. This is a good fit for checks every few minutes.
+
+The easiest path is:
+
+```bash
+scripts/setup_github_actions.sh
+```
 
 ### 1. Add Your Bark Key As A Secret
 
@@ -303,6 +394,13 @@ Add:
 
 ```text
 Name: BARK_KEY_BINANCE_CONTRACT
+Secret: your Bark key
+```
+
+To also monitor Binance alpha, add:
+
+```text
+Name: BARK_KEY_BINANCE_ALPHA
 Secret: your Bark key
 ```
 

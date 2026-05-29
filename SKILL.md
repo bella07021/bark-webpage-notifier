@@ -88,6 +88,12 @@ Do not include `url`, `subtitle`, or page excerpts unless the user explicitly as
 
 ## Commands
 
+For one-command skill installation from GitHub, use:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bella07021/bark-webpage-notifier/main/scripts/install_skill.sh | bash
+```
+
 Use the bundled script as a starting point when the source fits ChainCatcher-style search:
 
 ```bash
@@ -124,6 +130,14 @@ Required patterns:
 - Use a schedule such as `*/5 * * * *`; warn that GitHub schedules can be delayed by a few minutes.
 
 The bundled `examples/github-actions/chaincatcher-bark.yml` is a copy-ready starting point.
+
+For ordinary users, prefer the helper:
+
+```bash
+scripts/setup_github_actions.sh
+```
+
+It copies the workflow, asks for Bark keys, saves repository Secrets with `gh secret set`, and commits/pushes the workflow when possible.
 
 ## Common Mistakes
 

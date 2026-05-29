@@ -44,8 +44,16 @@ jobs:
       - name: Run Bark monitor
         run: |
           mkdir -p .bark-state
-          python3 scripts/bark_web_watch.py --topic binance-contract --once --init-if-empty
-          python3 scripts/bark_web_watch.py --topic binance-alpha --once --init-if-empty
+          if [ -n "${BARK_KEY_BINANCE_CONTRACT:-}" ]; then
+            python3 scripts/bark_web_watch.py --topic binance-contract --once --init-if-empty
+          else
+            echo "Skipping binance-contract because BARK_KEY_BINANCE_CONTRACT is not set."
+          fi
+          if [ -n "${BARK_KEY_BINANCE_ALPHA:-}" ]; then
+            python3 scripts/bark_web_watch.py --topic binance-alpha --once --init-if-empty
+          else
+            echo "Skipping binance-alpha because BARK_KEY_BINANCE_ALPHA is not set."
+          fi
 
       - name: Save seen state
         if: always()
