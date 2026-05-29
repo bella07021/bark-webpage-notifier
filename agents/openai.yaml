@@ -1,0 +1,4 @@
+interface:
+  display_name: "Bark Webpage Notifier"
+  short_description: "Create Bark push monitors for webpage search results."
+  default_prompt: "Create a Bark webpage notification monitor for this URL and group."
