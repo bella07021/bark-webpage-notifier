@@ -8,17 +8,28 @@
 
 ## 中文
 
-把【支持的网页列表】新消息标题，分组通过 Bark 推送到 iOS 端。由于此推送是通过 GitHub Actions 云端定时轮询，约 5 分钟一次，所以仅适用于时效性要求不高的消息。
+为了减少信息冗杂，并尽量精准抓取需要关注的内容，我做了一个简单的 Bark 网页消息推送工具。
+
+目前支持从部分币圈资讯网站抓取新消息，通过关键词筛选后，将标题按分组推送到 iOS 端的 Bark App。推送任务通过 GitHub Actions 在云端定时轮询运行，频率约为 5 分钟一次，因此更适合时效性要求不高的消息提醒。
+
+当前支持的资讯网站：
+
+- ChainCatcher
+- Odaily
+- PANews
+- CoinDesk
 
 ## 前置准备
 
 1. 注册一个 GitHub 账号。
 
-2. 在 iOS 端下载 Bark App，找到“推送消息分组”的 URL。后续配置时，需要先把 URL 末尾的 `groupName` 改成对应的组名，然后再粘贴完整 URL。
+2. 先在对应的资讯网站上手动输入关键词进行搜索和比对，确认你真正想监控的关键词。后续配置时将这个关键词作为 Bark 分组名。
+
+3. 在 iOS 端下载 Bark App，找到“推送消息分组”的 URL。后续配置时，需要先把 URL 末尾的 `groupName` 改成对应的组名，然后再粘贴完整 URL。
 
    ![Bark 分组 URL 示例，key 已遮挡](assets/bark-group-url-redacted.jpeg)
 
-3. 在终端检查并准备这些命令：
+4. 在终端检查并准备这些命令：
 
 ```bash
 git --version
@@ -27,19 +38,19 @@ python3 --version
 gh --version
 ```
 
-4. 如果缺少 GitHub CLI，先安装它：
+5. 如果缺少 GitHub CLI，先安装它：
 
 ```bash
 brew install gh
 ```
 
-5. 登录 GitHub：
+6. 登录 GitHub：
 
 ```bash
 gh auth login
 ```
 
-6. 如果你的电脑没有 `brew`，先安装 Homebrew：
+7. 如果你的电脑没有 `brew`，先安装 Homebrew：
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -231,17 +242,28 @@ python3 ~/.codex/skills/bark-webpage-notifier/scripts/bark_web_watch.py \
 
 ## English
 
-Push new titles from supported webpages to iOS through grouped Bark notifications. Polling runs in GitHub Actions about every 5 minutes, so this is best for messages that do not require second-level delivery.
+This is a small Bark webpage notification tool for reducing noisy feeds and focusing on the items you actually care about.
+
+It currently supports fetching new items from selected crypto news sites, filtering them by keyword, and pushing only the title to the Bark app on iOS with notification grouping. Polling runs in GitHub Actions about every 5 minutes, so it is best for messages that do not require second-level delivery.
+
+Supported news sites:
+
+- ChainCatcher
+- Odaily
+- PANews
+- CoinDesk
 
 ## Prerequisites
 
 1. Create a GitHub account.
 
-2. Install the Bark app on iOS and find the "grouped notification" URL. Before setup, replace the trailing `groupName` with your group name, then paste the full URL when prompted.
+2. Search manually on the target news site first and compare results to confirm the keyword you actually want to monitor. Use that keyword as the Bark group name during setup.
+
+3. Install the Bark app on iOS and find the "grouped notification" URL. Before setup, replace the trailing `groupName` with your group name, then paste the full URL when prompted.
 
    ![Bark group URL example with key redacted](assets/bark-group-url-redacted.jpeg)
 
-3. Check these commands in Terminal:
+4. Check these commands in Terminal:
 
 ```bash
 git --version
@@ -250,19 +272,19 @@ python3 --version
 gh --version
 ```
 
-4. If GitHub CLI is missing, install it first:
+5. If GitHub CLI is missing, install it first:
 
 ```bash
 brew install gh
 ```
 
-5. Log in to GitHub:
+6. Log in to GitHub:
 
 ```bash
 gh auth login
 ```
 
-6. If your Mac does not have `brew`, install Homebrew first:
+7. If your Mac does not have `brew`, install Homebrew first:
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
