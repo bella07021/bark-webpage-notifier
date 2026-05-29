@@ -63,11 +63,19 @@ need_command() {
   fi
 }
 
+read_input() {
+  if [ -r /dev/tty ]; then
+    read -r "$@" </dev/tty
+  else
+    read -r "$@"
+  fi
+}
+
 ask() {
   local prompt="$1"
   local default="$2"
   local value=""
-  read -r -p "${prompt} [${default}]: " value
+  read_input -p "${prompt} [${default}]: " value
   echo "${value:-$default}"
 }
 
@@ -75,7 +83,7 @@ ask_yes_no() {
   local prompt="$1"
   local default="$2"
   local value=""
-  read -r -p "${prompt} [${default}] " value
+  read_input -p "${prompt} [${default}] " value
   value="${value:-$default}"
   case "$value" in
     y|Y|yes|YES) return 0 ;;
@@ -120,7 +128,7 @@ set_bark_secret() {
   local value=""
 
   if ask_yes_no "Enable ${label} notifications?" "$default_answer"; then
-    read -r -s -p "Paste Bark key or full Bark URL for ${label}: " value
+    read_input -s -p "Paste Bark key or full Bark URL for ${label}: " value
     echo
     if [ -z "$value" ]; then
       echo "Skipped ${label}: empty Bark key."
