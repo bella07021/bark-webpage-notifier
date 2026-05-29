@@ -15,6 +15,7 @@ Create small local monitors that poll a webpage or API, extract new message titl
 2. Inspect the page before coding. Prefer a stable JSON/API endpoint over DOM parsing. For Nuxt pages, search `window.__NUXT__`, bundled JS, and network-like endpoints such as `/search/list`.
 3. Create or update a local script that:
    - reads `BARK_KEY` or a topic-specific key from `.env`
+   - also reads GitHub Actions environment variables/Secrets when no `.env` exists
    - normalizes a full Bark URL into just the key
    - fetches the source
    - strips HTML/highlight spans from titles
@@ -26,8 +27,9 @@ Create small local monitors that poll a webpage or API, extract new message titl
    - `.env` variable presence without printing values
    - Bark `--test-title`
    - `--init-seen` to mark current historical items as seen before live polling
+   - `--init-if-empty` for GitHub Actions so the first cloud run records current items without pushing old messages
    - `--once` to verify no old-message flood
-6. Only after the user confirms the test push, set up a recurring run with the app automation tool, launchd, cron, or another scheduler the user prefers.
+6. Only after the user confirms the test push, set up a recurring run with GitHub Actions, the app automation tool, launchd, cron, or another scheduler the user prefers. For GitHub Actions, store Bark keys in repository Secrets and persist `seen_*.json` with `actions/cache`.
 
 ## Recommended Files
 
@@ -109,9 +111,24 @@ python3 scripts/bark_web_watch.py --topic my-topic --init-seen
 python3 scripts/bark_web_watch.py --topic my-topic --once
 ```
 
+## GitHub Actions
+
+Use GitHub Actions when the monitor must keep running after the user's computer shuts down. Add a workflow under `.github/workflows/` rather than relying on local cron.
+
+Required patterns:
+
+- Put Bark keys in repository Secrets, for example `BARK_KEY_BINANCE_CONTRACT`.
+- Set group, keywords, and state path as workflow environment variables.
+- Restore and save `.bark-state` with `actions/cache/restore@v4` and `actions/cache/save@v4`; GitHub runners are ephemeral, so a plain local state file disappears after each run.
+- Run cloud jobs with `--once --init-if-empty` so the first run initializes state instead of pushing old messages.
+- Use a schedule such as `*/5 * * * *`; warn that GitHub schedules can be delayed by a few minutes.
+
+The bundled `examples/github-actions/chaincatcher-bark.yml` is a copy-ready starting point.
+
 ## Common Mistakes
 
 - Do not `source .env` blindly when values contain spaces or non-ASCII text. Parse key/value lines or use a dotenv parser.
 - Do not log full command lines that include Bark keys. Catch curl errors and print sanitized messages.
 - Do not run live polling before `--init-seen`; otherwise the first run can push old search results.
+- Do not put a live scheduled workflow in a public template repo unless it is meant to run there. Prefer examples under `examples/github-actions/`.
 - Do not infer the page title from meta tags. Extract the repeated result item title from the API or rendered list.

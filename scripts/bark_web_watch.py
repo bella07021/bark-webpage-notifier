@@ -2,6 +2,7 @@
 import argparse
 import html
 import json
+import os
 import re
 import shlex
 import subprocess
@@ -38,12 +39,22 @@ def parse_env_value(value):
 
 def load_env(path):
     env = {}
-    for raw_line in path.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        env[key.strip()] = parse_env_value(value)
+    if path.exists():
+        for raw_line in path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            env[key.strip()] = parse_env_value(value)
+    for key, value in os.environ.items():
+        if (
+            key == "BARK_KEY"
+            or key.startswith("BARK_KEY_")
+            or key.startswith("BARK_GROUP_")
+            or key.startswith("CHAINCATCHER_KEYWORDS_")
+            or key.startswith("STATE_PATH_")
+        ):
+            env[key] = value
     for key in list(env):
         if key == "BARK_KEY" or key.startswith("BARK_KEY_"):
             env[key] = normalize_bark_key(env[key])
@@ -123,6 +134,7 @@ def main():
     parser.add_argument("--env", default=".env")
     parser.add_argument("--page-size", type=int, default=10)
     parser.add_argument("--init-seen", action="store_true")
+    parser.add_argument("--init-if-empty", action="store_true")
     parser.add_argument("--once", action="store_true")
     parser.add_argument("--test-title")
     args = parser.parse_args()
@@ -138,7 +150,7 @@ def main():
     titles = fetch_chaincatcher_titles(keywords, args.page_size)
     seen = load_seen(state_path)
 
-    if args.init_seen:
+    if args.init_seen or (args.init_if_empty and not state_path.exists()):
         save_seen(state_path, seen | {item["id"] for item in titles})
         print(f"Initialized {state_path} without pushing.")
         return

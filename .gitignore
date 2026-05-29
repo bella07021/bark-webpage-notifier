@@ -1,4 +1,5 @@
 .env
+.bark-state/
 seen_*.json
 __pycache__/
 *.pyc

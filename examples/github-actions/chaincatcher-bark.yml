@@ -1,0 +1,47 @@
+name: Bark Webpage Watch
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: bark-webpage-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    env:
+      BARK_KEY_BINANCE_CONTRACT: ${{ secrets.BARK_KEY_BINANCE_CONTRACT }}
+      BARK_GROUP_BINANCE_CONTRACT: 币安合约
+      CHAINCATCHER_KEYWORDS_BINANCE_CONTRACT: 币安合约将上线
+      STATE_PATH_BINANCE_CONTRACT: .bark-state/seen_binance_contract.json
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore seen state
+        id: cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: .bark-state
+          key: bark-state-${{ github.run_id }}
+          restore-keys: |
+            bark-state-
+
+      - name: Run Bark monitor
+        run: |
+          mkdir -p .bark-state
+          python3 scripts/bark_web_watch.py --topic binance-contract --once --init-if-empty
+
+      - name: Save seen state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .bark-state
+          key: bark-state-${{ github.run_id }}

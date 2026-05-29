@@ -17,6 +17,7 @@
 - 提取消息标题，并清理网页高亮 HTML
 - 只推送新增消息，避免重复通知
 - 用本地 `seen_*.json` 记录已推送消息
+- 支持用 GitHub Actions 云端定时运行
 - 支持先发测试推送，再正式开启监控
 
 ## 安装
@@ -110,6 +111,67 @@ cron 示例：每 3 分钟检查一次。
 */3 * * * * cd /path/to/workspace && python3 ~/.codex/skills/bark-webpage-notifier/scripts/bark_web_watch.py --topic binance-contract --once
 ```
 
+## 用 GitHub Actions 云端运行
+
+如果希望电脑关机后也能继续推送，可以把脚本放在 GitHub 仓库里，用 GitHub Actions 定时运行。几分钟级别的监控很适合这种方式。
+
+### 1. 添加 Bark key 到 Secrets
+
+进入你的 GitHub 仓库：
+
+```text
+Settings -> Secrets and variables -> Actions -> New repository secret
+```
+
+添加：
+
+```text
+Name: BARK_KEY_BINANCE_CONTRACT
+Secret: 你的 Bark key
+```
+
+### 2. 复制 workflow 示例
+
+把示例文件复制到仓库的 workflow 目录：
+
+```bash
+mkdir -p .github/workflows
+cp examples/github-actions/chaincatcher-bark.yml .github/workflows/bark-web-watch.yml
+```
+
+示例 workflow 每 5 分钟运行一次，也支持手动触发：
+
+```yaml
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+```
+
+### 3. 第一次运行
+
+推送 workflow 到 GitHub 后，进入：
+
+```text
+Actions -> Bark Webpage Watch -> Run workflow
+```
+
+第一次运行会建立 `.bark-state` 缓存，只记录当前标题，不推送旧消息。之后定时任务只会推送新增标题。
+
+### 4. 修改监控主题
+
+如果要改成别的主题，修改 workflow 里的环境变量：
+
+```yaml
+env:
+  BARK_KEY_BINANCE_CONTRACT: ${{ secrets.BARK_KEY_BINANCE_CONTRACT }}
+  BARK_GROUP_BINANCE_CONTRACT: 币安合约
+  CHAINCATCHER_KEYWORDS_BINANCE_CONTRACT: 币安合约将上线
+  STATE_PATH_BINANCE_CONTRACT: .bark-state/seen_binance_contract.json
+```
+
+GitHub Actions 的 `schedule` 不是秒级实时任务，可能有几分钟延迟，这是正常的。
+
 ## 注意事项
 
 - 不要提交 `.env`
@@ -131,6 +193,7 @@ It is designed for pages where a stable API, SSR HTML, RSS feed, or embedded JSO
 - Extracts message titles and strips highlight HTML
 - Pushes only new items
 - Stores local seen-state to avoid duplicate pushes
+- Supports GitHub Actions scheduled cloud runs
 - Supports a test push before live monitoring
 
 ## Install
@@ -223,6 +286,67 @@ Example cron entry for every 3 minutes:
 ```cron
 */3 * * * * cd /path/to/workspace && python3 ~/.codex/skills/bark-webpage-notifier/scripts/bark_web_watch.py --topic binance-contract --once
 ```
+
+## Run In GitHub Actions
+
+If you want the monitor to keep running after your computer is off, run it on GitHub Actions. This is a good fit for checks every few minutes.
+
+### 1. Add Your Bark Key As A Secret
+
+Open your GitHub repository:
+
+```text
+Settings -> Secrets and variables -> Actions -> New repository secret
+```
+
+Add:
+
+```text
+Name: BARK_KEY_BINANCE_CONTRACT
+Secret: your Bark key
+```
+
+### 2. Copy The Workflow Example
+
+Copy the bundled example into your workflow directory:
+
+```bash
+mkdir -p .github/workflows
+cp examples/github-actions/chaincatcher-bark.yml .github/workflows/bark-web-watch.yml
+```
+
+The example runs every 5 minutes and also supports manual runs:
+
+```yaml
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+```
+
+### 3. First Run
+
+After pushing the workflow, open:
+
+```text
+Actions -> Bark Webpage Watch -> Run workflow
+```
+
+The first run creates a `.bark-state` cache and records current titles without pushing old items. Later scheduled runs only push new titles.
+
+### 4. Change The Topic
+
+Edit the workflow env block for a different topic:
+
+```yaml
+env:
+  BARK_KEY_BINANCE_CONTRACT: ${{ secrets.BARK_KEY_BINANCE_CONTRACT }}
+  BARK_GROUP_BINANCE_CONTRACT: 币安合约
+  CHAINCATCHER_KEYWORDS_BINANCE_CONTRACT: 币安合约将上线
+  STATE_PATH_BINANCE_CONTRACT: .bark-state/seen_binance_contract.json
+```
+
+GitHub Actions schedules are not real-time; delays of a few minutes are normal.
 
 ## Notes
 
