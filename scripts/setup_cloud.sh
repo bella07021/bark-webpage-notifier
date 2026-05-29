@@ -143,6 +143,28 @@ set_bark_secret() {
   return 1
 }
 
+start_workflow() {
+  local attempts=8
+  local attempt=1
+
+  while [ "$attempt" -le "$attempts" ]; do
+    if gh workflow run "bark-web-watch.yml" --repo "$TARGET_REPO" --ref main >/dev/null 2>&1; then
+      echo "Started the first workflow run."
+      return 0
+    fi
+
+    if [ "$attempt" -lt "$attempts" ]; then
+      echo "Waiting for GitHub to register the workflow... (${attempt}/${attempts})"
+      sleep 3
+    fi
+    attempt=$((attempt + 1))
+  done
+
+  echo "Workflow was pushed, but GitHub did not start it automatically."
+  echo "Open Actions and click Run workflow: https://github.com/${TARGET_REPO}/actions/workflows/bark-web-watch.yml"
+  return 1
+}
+
 need_command git
 need_command curl
 need_command gh
@@ -155,6 +177,9 @@ fi
 GITHUB_USER="$(gh api user --jq .login)"
 if [ -z "$TARGET_REPO" ]; then
   TARGET_REPO="$(ask "GitHub repository to create or use" "${GITHUB_USER}/${DEFAULT_REPO_SUFFIX}")"
+fi
+if [[ "$TARGET_REPO" != */* ]]; then
+  TARGET_REPO="${GITHUB_USER}/${TARGET_REPO}"
 fi
 
 if [ -z "$VISIBILITY" ]; then
@@ -227,11 +252,7 @@ if [ "$enabled_count" -eq 0 ]; then
 fi
 
 if [ "$RUN_WORKFLOW" -eq 1 ]; then
-  if gh workflow run "bark-web-watch.yml" --repo "$TARGET_REPO" >/dev/null 2>&1; then
-    echo "Started the first workflow run."
-  else
-    echo "Workflow was pushed, but GitHub did not start it automatically. Open Actions and click Run workflow."
-  fi
+  start_workflow || true
 fi
 
 echo
