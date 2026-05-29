@@ -8,13 +8,13 @@
 
 ## 中文
 
-把网页、搜索页、资讯列表里的新消息标题推送到 Bark iOS 通知。默认用 GitHub Actions 云端定时轮询，所以电脑关机、Codex 关闭后也能继续运行。
+把【支持的网页列表】新消息标题，分组通过 Bark 推送到 iOS 端。由于此推送是通过 GitHub Actions 云端定时轮询，约 5 分钟一次，所以仅适用于时效性要求不高的消息。
 
 ## 前置准备
 
 1. 注册一个 GitHub 账号。
 
-2. 在 iOS 端下载 Bark App，找到“推送消息分组”的 URL。后续配置时可以粘贴完整 URL，也可以只粘贴 URL 里的 key。需要分组时，把 URL 末尾的 `groupName` 改成对应的组名。
+2. 在 iOS 端下载 Bark App，找到“推送消息分组”的 URL。后续配置时，需要先把 URL 末尾的 `groupName` 改成对应的组名，然后再粘贴完整 URL。
 
    ![Bark 分组 URL 示例，key 已遮挡](assets/bark-group-url-redacted.jpeg)
 
@@ -58,8 +58,9 @@ curl -fsSL https://raw.githubusercontent.com/bella07021/bark-webpage-notifier/ma
 - 选择中文或英文
 - 创建或更新一个 GitHub 仓库
 - 添加一个或多个推送组
-- 为每个推送组选择信息来源、填写关键词、Bark 分组名和 Bark key
+- 为每个推送组选择信息来源、填写关键词、Bark 分组名和 Bark URL
 - 确认后把 Bark key 保存到 GitHub Secrets
+- 发送一条 `test success` 测试推送
 - 推送 GitHub Actions workflow
 - 启动第一次 workflow
 
@@ -230,13 +231,13 @@ python3 ~/.codex/skills/bark-webpage-notifier/scripts/bark_web_watch.py \
 
 ## English
 
-Push new webpage, search-page, or news-list titles to Bark iOS notifications. The default setup uses GitHub Actions for cloud polling, so it keeps running even when your computer and Codex are closed.
+Push new titles from supported webpages to iOS through grouped Bark notifications. Polling runs in GitHub Actions about every 5 minutes, so this is best for messages that do not require second-level delivery.
 
 ## Prerequisites
 
 1. Create a GitHub account.
 
-2. Install the Bark app on iOS and find the "grouped notification" URL. During setup, you can paste the full URL or just the key inside the URL. To use a group, replace the trailing `groupName` with your group name.
+2. Install the Bark app on iOS and find the "grouped notification" URL. Before setup, replace the trailing `groupName` with your group name, then paste the full URL when prompted.
 
    ![Bark group URL example with key redacted](assets/bark-group-url-redacted.jpeg)
 
@@ -280,8 +281,9 @@ The script guides you through the full setup:
 - choose Chinese or English
 - create or update a GitHub repository
 - add one or more notification groups
-- choose a source, keywords, Bark group, and Bark key for each group
+- choose a source, keywords, Bark group, and Bark URL for each group
 - save Bark keys as GitHub Secrets after confirmation
+- send a `test success` push
 - push the GitHub Actions workflow
 - start the first workflow run
 

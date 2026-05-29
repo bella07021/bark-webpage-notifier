@@ -5,6 +5,8 @@ import json
 import re
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 
@@ -92,6 +94,13 @@ def env_suffix(value):
     return suffix or "TOPIC"
 
 
+def normalize_bark_key(value):
+    value = (value or "").strip()
+    value = value.removeprefix("https://api.day.app/")
+    value = value.removeprefix("http://api.day.app/")
+    return value.split("/", 1)[0]
+
+
 def load_config(path):
     if not path.exists():
         return {"topics": []}
@@ -136,6 +145,32 @@ def set_secret(repo, secret_name, bark_value):
         ["gh", "secret", "set", secret_name, "--repo", repo, "--body", bark_value],
         check=True,
     )
+
+
+def send_test_push(bark_value, group):
+    bark_key = normalize_bark_key(bark_value)
+    payload = json.dumps(
+        {"title": group, "body": "test success", "group": group},
+        ensure_ascii=False,
+    ).encode("utf-8")
+    request = urllib.request.Request(
+        f"https://api.day.app/{bark_key}",
+        data=payload,
+        headers={"Content-Type": "application/json; charset=utf-8"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            body = response.read().decode("utf-8")
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"Bark test push failed: {exc}") from exc
+
+    try:
+        result = json.loads(body)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("Bark test push returned non-JSON response") from exc
+    if result.get("code") != 200:
+        raise RuntimeError(f"Bark test push failed: {result.get('message') or result}")
 
 
 def patch_workflow(path, secret_names):
@@ -239,10 +274,12 @@ def main():
         else:
             note("正在保存 GitHub Secret...", "Saving GitHub Secret...")
             set_secret(args.repo, secret_name, bark_value)
+            note("正在发送 test success 测试推送...", "Sending test success push...")
+            send_test_push(bark_value, group)
             topics.append(topic)
             save_config(config_path, config)
             patch_workflow(workflow_path, [item["secret_env"] for item in topics])
-            ok(f"已保存：{group}", f"Saved: {group}")
+            ok(f"已保存并测试成功：{group}", f"Saved and tested: {group}")
 
         if not ask_yes_no(tr("继续添加另一个推送组？", "Add another notification group?"), "N"):
             break
